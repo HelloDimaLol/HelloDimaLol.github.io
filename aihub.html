@@ -1,0 +1,1344 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🤖 AI Hub — Выбор нейросети</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #0a0a0f;
+            min-height: 100vh;
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .bg-animation::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(120, 0, 255, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(0, 200, 255, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(255, 0, 128, 0.1) 0%, transparent 40%),
+                radial-gradient(circle at 60% 60%, rgba(0, 255, 200, 0.08) 0%, transparent 40%);
+            animation: bgMove 20s ease-in-out infinite;
+        }
+
+        @keyframes bgMove {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            25% { transform: translate(2%, 2%) rotate(1deg); }
+            50% { transform: translate(-1%, 3%) rotate(-1deg); }
+            75% { transform: translate(3%, -2%) rotate(2deg); }
+        }
+
+        .grid-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+            background-size: 50px 50px;
+            z-index: -1;
+        }
+
+        /* ========== NAVBAR ========== */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            padding: 12px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(10, 10, 15, 0.85);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            transform: translateY(-100%);
+            opacity: 0;
+            animation: navSlideDown 0.8s ease 0.3s forwards;
+        }
+
+        @keyframes navSlideDown {
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            opacity: 0;
+            transform: translateX(-20px);
+            animation: navItemFade 0.5s ease 0.5s forwards;
+        }
+
+        .nav-logo-icon {
+            width: 38px;
+            height: 38px;
+            background: linear-gradient(135deg, #7c3aed, #06b6d4);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .nav-logo-icon svg { width: 22px; height: 22px; fill: white; }
+
+        .nav-logo-text {
+            font-size: 1.2rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, #fff, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 18px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            color: #aaa;
+            font-size: 13px;
+            font-family: inherit;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+
+        .nav-btn:nth-child(1) { animation: navItemFade 0.5s ease 0.6s forwards; }
+        .nav-btn:nth-child(2) { animation: navItemFade 0.5s ease 0.7s forwards; }
+
+        @keyframes navItemFade {
+            to { opacity: 1; transform: translateY(0) translateX(0); }
+        }
+
+        .nav-btn svg { width: 16px; height: 16px; fill: currentColor; }
+
+        .nav-btn:hover {
+            background: rgba(255,255,255,0.1);
+            border-color: rgba(255,255,255,0.2);
+            color: #fff;
+            transform: translateY(-2px);
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            padding-top: 90px;
+        }
+
+        header { text-align: center; margin-bottom: 50px; }
+
+        .logo {
+            display: inline-flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .logo-icon {
+            width: 55px;
+            height: 55px;
+            background: linear-gradient(135deg, #7c3aed, #06b6d4);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            box-shadow: 0 10px 40px rgba(124, 58, 237, 0.4);
+            animation: iconPulse 3s ease-in-out infinite;
+        }
+
+        @keyframes iconPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        h1 {
+            font-size: 3.2rem;
+            font-weight: 800;
+            background: linear-gradient(90deg, #ff0000, #ff7700, #ffdd00, #00ff00, #00ffff, #0077ff, #7700ff, #ff00ff, #ff0000);
+            background-size: 300% 100%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: rainbow 4s linear infinite;
+        }
+
+        @keyframes rainbow {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 300% 50%; }
+        }
+
+        .title-glow {
+            position: relative;
+            display: inline-block;
+        }
+
+        .title-glow::before {
+            content: 'AI Hub';
+            position: absolute;
+            top: 0; left: 0;
+            font-size: 3.2rem;
+            font-weight: 800;
+            background: linear-gradient(90deg, #ff0000, #ff7700, #ffdd00, #00ff00, #00ffff, #0077ff, #7700ff, #ff00ff, #ff0000);
+            background-size: 300% 100%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: rainbow 4s linear infinite;
+            filter: blur(20px);
+            opacity: 0.6;
+            z-index: -1;
+        }
+
+        .subtitle { font-size: 1.1rem; color: #777; margin-top: 12px; font-weight: 300; }
+
+        .search-container {
+            max-width: 550px;
+            margin: 0 auto 40px;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 16px 22px 16px 50px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 14px;
+            color: #fff;
+            font-size: 15px;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #7c3aed;
+            background: rgba(255,255,255,0.08);
+            box-shadow: 0 0 30px rgba(124, 58, 237, 0.2);
+        }
+
+        .search-input::placeholder { color: #555; }
+
+        .search-icon {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 18px;
+            height: 18px;
+        }
+
+        .search-icon svg { width: 100%; height: 100%; fill: #666; }
+
+        .filters {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 9px 20px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 25px;
+            color: #888;
+            font-size: 13px;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn:hover {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            transform: scale(1.05);
+        }
+
+        .filter-btn.active {
+            background: linear-gradient(135deg, #7c3aed, #06b6d4);
+            border-color: transparent;
+            color: #fff;
+            box-shadow: 0 5px 20px rgba(124, 58, 237, 0.4);
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 20px;
+            padding: 24px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transform: scale(1);
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.4s ease, border-color 0.4s ease;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(135deg, var(--card-color-1, rgba(124, 58, 237, 0.1)), var(--card-color-2, rgba(6, 182, 212, 0.1)));
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .card:hover {
+            transform: scale(1.05) translateY(-5px);
+            border-color: rgba(255,255,255,0.25);
+            z-index: 20;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.4), 0 0 80px var(--card-glow, rgba(124, 58, 237, 0.3));
+        }
+
+        .card:hover::before { opacity: 1; }
+
+        .card-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .card:hover .card-icon { transform: scale(1.15) rotate(5deg); }
+        .card-icon svg { width: 30px; height: 30px; }
+
+        .launch-btn {
+            padding: 9px 20px;
+            background: linear-gradient(135deg, var(--btn-color-1, #7c3aed), var(--btn-color-2, #06b6d4));
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover .launch-btn { transform: scale(1.08); box-shadow: 0 8px 25px rgba(124, 58, 237, 0.4); }
+
+        .card-title { font-size: 1.25rem; font-weight: 700; margin-bottom: 3px; transition: transform 0.3s ease; }
+        .card:hover .card-title { transform: translateX(4px); }
+
+        .tag {
+            padding: 4px 10px;
+            background: rgba(255,255,255,0.06);
+            border-radius: 15px;
+            font-size: 0.7rem;
+            color: #888;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover .tag { background: rgba(255,255,255,0.12); color: #fff; }
+
+        .card-content { position: relative; z-index: 1; }
+        .card-header { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+        .card-company { font-size: 0.8rem; color: #666; }
+        .card-description { color: #888; font-size: 0.9rem; line-height: 1.5; margin-bottom: 16px; }
+        .card-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+        .card-footer { display: flex; justify-content: space-between; align-items: center; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.06); }
+        .card-stats { display: flex; gap: 12px; }
+        .stat { display: flex; align-items: center; gap: 4px; font-size: 0.8rem; color: #666; }
+
+        .status {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 0.65rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status.online { background: rgba(34, 197, 94, 0.2); color: #22c55e; }
+        .status.popular { background: rgba(234, 179, 8, 0.2); color: #eab308; }
+        .status.new { background: rgba(124, 58, 237, 0.2); color: #a78bfa; }
+        .status.hot { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+        .status.beta { background: rgba(6, 182, 212, 0.2); color: #06b6d4; }
+        .status.free { background: rgba(34, 197, 94, 0.2); color: #22c55e; }
+
+        /* Card Colors */
+        .card.chatgpt { --card-color-1: rgba(16, 163, 127, 0.2); --card-glow: rgba(16, 163, 127, 0.4); --btn-color-1: #10a37f; --btn-color-2: #1a7f64; }
+        .card.claude { --card-color-1: rgba(204, 119, 71, 0.2); --card-glow: rgba(204, 119, 71, 0.4); --btn-color-1: #cc7747; --btn-color-2: #a85d35; }
+        .card.deepseek { --card-color-1: rgba(59, 130, 246, 0.2); --card-glow: rgba(59, 130, 246, 0.4); --btn-color-1: #3b82f6; --btn-color-2: #1d4ed8; }
+        .card.gemini { --card-color-1: rgba(66, 133, 244, 0.2); --card-glow: rgba(66, 133, 244, 0.4); --btn-color-1: #4285f4; --btn-color-2: #ea4335; }
+        .card.copilot { --card-color-1: rgba(0, 120, 212, 0.2); --card-glow: rgba(0, 120, 212, 0.4); --btn-color-1: #0078d4; --btn-color-2: #005a9e; }
+        .card.perplexity { --card-color-1: rgba(32, 178, 170, 0.2); --card-glow: rgba(32, 178, 170, 0.4); --btn-color-1: #20b2aa; --btn-color-2: #178a84; }
+        .card.grok { --card-color-1: rgba(29, 155, 240, 0.2); --card-glow: rgba(29, 155, 240, 0.3); --btn-color-1: #1d9bf0; --btn-color-2: #0077b5; }
+        .card.llama { --card-color-1: rgba(102, 51, 153, 0.2); --card-glow: rgba(102, 51, 153, 0.4); --btn-color-1: #663399; --btn-color-2: #4a2578; }
+        .card.mistral { --card-color-1: rgba(255, 119, 0, 0.2); --card-glow: rgba(255, 119, 0, 0.4); --btn-color-1: #ff7700; --btn-color-2: #cc5500; }
+        .card.midjourney { --card-color-1: rgba(255, 255, 255, 0.1); --card-glow: rgba(255, 255, 255, 0.2); --btn-color-1: #fff; --btn-color-2: #ccc; }
+        .card.midjourney .launch-btn { color: #000; }
+        .card.dalle { --card-color-1: rgba(255, 107, 107, 0.2); --card-glow: rgba(255, 107, 107, 0.4); --btn-color-1: #ff6b6b; --btn-color-2: #4ecdc4; }
+        .card.stable { --card-color-1: rgba(139, 92, 246, 0.2); --card-glow: rgba(139, 92, 246, 0.4); --btn-color-1: #8b5cf6; --btn-color-2: #6d28d9; }
+        .card.flux { --card-color-1: rgba(0, 0, 0, 0.3); --card-glow: rgba(255, 255, 255, 0.15); --btn-color-1: #333; --btn-color-2: #111; }
+        .card.leonardo { --card-color-1: rgba(138, 43, 226, 0.2); --card-glow: rgba(138, 43, 226, 0.4); --btn-color-1: #8a2be2; --btn-color-2: #6a1cb0; }
+        .card.ideogram { --card-color-1: rgba(255, 105, 180, 0.2); --card-glow: rgba(255, 105, 180, 0.4); --btn-color-1: #ff69b4; --btn-color-2: #db4d94; }
+        .card.suno { --card-color-1: rgba(255, 0, 127, 0.2); --card-glow: rgba(255, 0, 127, 0.4); --btn-color-1: #ff007f; --btn-color-2: #7f00ff; }
+        .card.udio { --card-color-1: rgba(255, 215, 0, 0.2); --card-glow: rgba(255, 215, 0, 0.4); --btn-color-1: #ffd700; --btn-color-2: #ffb300; }
+        .card.udio .launch-btn { color: #000; }
+        .card.elevenlabs { --card-color-1: rgba(0, 0, 0, 0.3); --card-glow: rgba(255, 255, 255, 0.15); --btn-color-1: #333; --btn-color-2: #111; }
+        .card.runway { --card-color-1: rgba(0, 209, 255, 0.2); --card-glow: rgba(0, 209, 255, 0.4); --btn-color-1: #00d1ff; --btn-color-2: #00a3cc; }
+        .card.pika { --card-color-1: rgba(255, 193, 7, 0.2); --card-glow: rgba(255, 193, 7, 0.4); --btn-color-1: #ffc107; --btn-color-2: #e0a800; }
+        .card.pika .launch-btn { color: #000; }
+        .card.sora { --card-color-1: rgba(16, 163, 127, 0.2); --card-glow: rgba(16, 163, 127, 0.4); --btn-color-1: #10a37f; --btn-color-2: #0d8a6a; }
+        .card.kling { --card-color-1: rgba(255, 87, 34, 0.2); --card-glow: rgba(255, 87, 34, 0.4); --btn-color-1: #ff5722; --btn-color-2: #e64a19; }
+        .card.heygen { --card-color-1: rgba(99, 102, 241, 0.2); --card-glow: rgba(99, 102, 241, 0.4); --btn-color-1: #6366f1; --btn-color-2: #4f46e5; }
+        .card.gamma { --card-color-1: rgba(236, 72, 153, 0.2); --card-glow: rgba(236, 72, 153, 0.4); --btn-color-1: #ec4899; --btn-color-2: #db2777; }
+        .card.notion { --card-color-1: rgba(255, 255, 255, 0.1); --card-glow: rgba(255, 255, 255, 0.15); --btn-color-1: #fff; --btn-color-2: #e0e0e0; }
+        .card.notion .launch-btn { color: #000; }
+        .card.cursor { --card-color-1: rgba(139, 92, 246, 0.2); --card-glow: rgba(139, 92, 246, 0.4); --btn-color-1: #8b5cf6; --btn-color-2: #7c3aed; }
+        .card.github { --card-color-1: rgba(110, 84, 148, 0.2); --card-glow: rgba(110, 84, 148, 0.4); --btn-color-1: #6e5494; --btn-color-2: #553c73; }
+        .card.you { --card-color-1: rgba(99, 102, 241, 0.2); --card-glow: rgba(99, 102, 241, 0.4); --btn-color-1: #6366f1; --btn-color-2: #4f46e5; }
+        .card.phind { --card-color-1: rgba(79, 70, 229, 0.2); --card-glow: rgba(79, 70, 229, 0.4); --btn-color-1: #4f46e5; --btn-color-2: #4338ca; }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+
+        /* Modal */
+        .modal {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            visibility: hidden;
+            opacity: 0;
+            background: rgba(0, 0, 0, 0);
+            backdrop-filter: blur(0px);
+            transition: visibility 0s linear 0.4s, opacity 0.4s ease, background 0.4s ease, backdrop-filter 0.4s ease;
+        }
+
+        .modal.active {
+            visibility: visible;
+            opacity: 1;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(15px);
+            transition: visibility 0s linear 0s, opacity 0.4s ease, background 0.4s ease, backdrop-filter 0.4s ease;
+        }
+
+        .modal-content {
+            background: linear-gradient(145deg, #1a1a2e, #16162a);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 24px;
+            padding: 40px;
+            max-width: 480px;
+            width: 90%;
+            text-align: center;
+            position: relative;
+            transform: translateY(80px) scale(0.85);
+            opacity: 0;
+            transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.5), 0 0 80px rgba(124, 58, 237, 0.15);
+        }
+
+        .modal.active .modal-content {
+            transform: translateY(0) scale(1);
+            opacity: 1;
+        }
+
+        .modal-content::before {
+            content: '';
+            position: absolute;
+            top: -2px; left: -2px; right: -2px; bottom: -2px;
+            background: linear-gradient(135deg, #7c3aed, #06b6d4, #7c3aed);
+            background-size: 200% 200%;
+            border-radius: 26px;
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .modal.active .modal-content::before {
+            opacity: 0.4;
+            animation: borderGlow 3s linear infinite;
+        }
+
+        @keyframes borderGlow {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .modal-icon {
+            width: 80px; height: 80px;
+            margin: 0 auto 20px;
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.2), rgba(6, 182, 212, 0.2));
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            transform: scale(0) rotate(-180deg);
+            transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s;
+        }
+
+        .modal.active .modal-icon { transform: scale(1) rotate(0deg); }
+        .modal-icon svg { width: 40px; height: 40px; fill: url(#iconGradient); }
+
+        .modal h2 {
+            font-size: 1.7rem;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #fff, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            transform: translateY(20px);
+            opacity: 0;
+            transition: all 0.4s ease 0.15s;
+        }
+
+        .modal.active h2 { transform: translateY(0); opacity: 1; }
+
+        .modal p, .modal-text {
+            color: #777;
+            margin-bottom: 25px;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            transform: translateY(20px);
+            opacity: 0;
+            transition: all 0.4s ease 0.2s;
+        }
+
+        .modal.active p, .modal.active .modal-text { transform: translateY(0); opacity: 1; }
+
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            transform: translateY(20px);
+            opacity: 0;
+            transition: all 0.4s ease 0.25s;
+        }
+
+        .modal.active .modal-buttons { transform: translateY(0); opacity: 1; }
+
+        .modal-btn {
+            padding: 14px 32px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+
+        .modal-btn.primary {
+            background: linear-gradient(135deg, #7c3aed, #06b6d4);
+            border: none;
+            color: #fff;
+            box-shadow: 0 10px 30px rgba(124, 58, 237, 0.4);
+        }
+
+        .modal-btn.primary:hover { transform: scale(1.05) translateY(-2px); }
+
+        .modal-btn.secondary {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: #fff;
+        }
+
+        .modal-btn.secondary:hover { background: rgba(255,255,255,0.1); transform: scale(1.05); }
+
+        .modal-close {
+            position: absolute;
+            top: 16px; right: 16px;
+            width: 36px; height: 36px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            color: #666;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transform: scale(0);
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s, background 0.3s ease, color 0.3s ease;
+        }
+
+        .modal.active .modal-close { transform: scale(1); }
+        .modal-close:hover { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+
+        .modal-content.large {
+            max-width: 650px;
+            max-height: 85vh;
+            text-align: left;
+            padding: 35px;
+        }
+
+        .modal-content.large h2 { text-align: center; margin-bottom: 20px; }
+
+        .modal-scroll {
+            max-height: 380px;
+            overflow-y: auto;
+            padding-right: 12px;
+            margin-bottom: 20px;
+        }
+
+        .modal-scroll h3 { color: #a78bfa; font-size: 1rem; margin: 18px 0 8px; }
+        .modal-scroll h3:first-child { margin-top: 0; }
+        .modal-scroll p { margin-bottom: 12px; transform: none; opacity: 1; font-size: 0.9rem; }
+        .modal-scroll ul { margin: 8px 0 12px 18px; color: #777; font-size: 0.9rem; }
+        .modal-scroll li { margin-bottom: 6px; line-height: 1.5; }
+        .modal-scroll a { color: #06b6d4; text-decoration: none; }
+        .modal-scroll a:hover { color: #7c3aed; }
+
+        .version-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.2), rgba(6, 182, 212, 0.2));
+            border-radius: 15px;
+            font-size: 0.8rem;
+            color: #a78bfa;
+            margin-left: 8px;
+        }
+
+        .feature-list {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin: 12px 0;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 8px;
+            color: #999;
+            font-size: 0.85rem;
+        }
+
+        .feature-item svg { width: 16px; height: 16px; fill: #22c55e; flex-shrink: 0; }
+
+        .footer {
+            margin-top: 60px;
+            padding: 35px 20px;
+            border-top: 1px solid rgba(255,255,255,0.06);
+            text-align: center;
+        }
+
+        .footer-author { font-size: 0.95rem; color: #666; margin-bottom: 8px; }
+        .footer-author span { font-weight: 600; background: linear-gradient(90deg, #7c3aed, #06b6d4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .footer-disclaimer { font-size: 0.8rem; color: #444; line-height: 1.5; }
+        .footer-year { margin-top: 15px; font-size: 0.75rem; color: #333; }
+
+        .card { animation: fadeInUp 0.5s ease forwards; opacity: 0; }
+        .card:nth-child(1) { animation-delay: 0.02s; }
+        .card:nth-child(2) { animation-delay: 0.04s; }
+        .card:nth-child(3) { animation-delay: 0.06s; }
+        .card:nth-child(4) { animation-delay: 0.08s; }
+        .card:nth-child(5) { animation-delay: 0.1s; }
+        .card:nth-child(6) { animation-delay: 0.12s; }
+        .card:nth-child(7) { animation-delay: 0.14s; }
+        .card:nth-child(8) { animation-delay: 0.16s; }
+        .card:nth-child(9) { animation-delay: 0.18s; }
+        .card:nth-child(10) { animation-delay: 0.2s; }
+        .card:nth-child(11) { animation-delay: 0.22s; }
+        .card:nth-child(12) { animation-delay: 0.24s; }
+        .card:nth-child(13) { animation-delay: 0.26s; }
+        .card:nth-child(14) { animation-delay: 0.28s; }
+        .card:nth-child(15) { animation-delay: 0.3s; }
+        .card:nth-child(16) { animation-delay: 0.32s; }
+        .card:nth-child(17) { animation-delay: 0.34s; }
+        .card:nth-child(18) { animation-delay: 0.36s; }
+        .card:nth-child(19) { animation-delay: 0.38s; }
+        .card:nth-child(20) { animation-delay: 0.4s; }
+        .card:nth-child(21) { animation-delay: 0.42s; }
+        .card:nth-child(22) { animation-delay: 0.44s; }
+        .card:nth-child(23) { animation-delay: 0.46s; }
+        .card:nth-child(24) { animation-delay: 0.48s; }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(25px) scale(0.96); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 2rem; }
+            .title-glow::before { font-size: 2rem; }
+            .cards-grid { grid-template-columns: 1fr; }
+            .filters { gap: 6px; }
+            .filter-btn { padding: 7px 14px; font-size: 12px; }
+            .navbar { padding: 10px 12px; }
+            .nav-logo-text { display: none; }
+            .nav-btn span { display: none; }
+            .nav-btn { padding: 9px 10px; }
+            .modal-content { padding: 25px 20px; }
+            .modal-buttons { flex-direction: column; }
+            .modal-btn { width: 100%; }
+            .feature-list { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <svg width="0" height="0" style="position:absolute">
+        <defs>
+            <linearGradient id="iconGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#7c3aed"/>
+                <stop offset="100%" style="stop-color:#06b6d4"/>
+            </linearGradient>
+        </defs>
+    </svg>
+
+    <div class="bg-animation"></div>
+    <div class="grid-overlay"></div>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <a href="#" class="nav-logo">
+            <div class="nav-logo-icon">
+                <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+            </div>
+            <span class="nav-logo-text">AI Hub</span>
+        </a>
+        <div class="nav-right">
+            <button class="nav-btn" onclick="openLicense()">
+                <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+                <span data-i18n="license">Лицензия</span>
+            </button>
+            <button class="nav-btn" onclick="openAbout()">
+                <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                <span data-i18n="about">О сайте</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <header>
+            <div class="logo">
+                <div class="logo-icon">🤖</div>
+                <div class="title-glow"><h1>AI Hub</h1></div>
+            </div>
+            <p class="subtitle" data-i18n="subtitle">Все лучшие нейросети в одном месте</p>
+        </header>
+
+        <div class="search-container">
+            <span class="search-icon"><svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg></span>
+            <input type="text" class="search-input" data-i18n-placeholder="search" placeholder="Поиск нейросетей..." id="searchInput">
+        </div>
+
+        <div class="filters">
+            <button class="filter-btn active" data-filter="all" data-i18n="all">Все</button>
+            <button class="filter-btn" data-filter="chat">💬 <span data-i18n="chatbots">Чат-боты</span></button>
+            <button class="filter-btn" data-filter="image">🎨 <span data-i18n="images">Изображения</span></button>
+            <button class="filter-btn" data-filter="video">🎬 <span data-i18n="video">Видео</span></button>
+            <button class="filter-btn" data-filter="audio">🎵 <span data-i18n="audio">Аудио</span></button>
+            <button class="filter-btn" data-filter="code">💻 <span data-i18n="code">Код</span></button>
+            <button class="filter-btn" data-filter="search">🔍 <span data-i18n="searchCat">Поиск</span></button>
+            <button class="filter-btn" data-filter="tools">🛠️ <span data-i18n="tools">Инструменты</span></button>
+        </div>
+
+        <div class="cards-grid" id="cardsGrid">
+            
+            <!-- ChatGPT -->
+            <div class="card chatgpt" data-category="chat code" onclick="openModal('ChatGPT', 'https://chat.openai.com', '💚')">
+                <span class="status popular">🔥 TOP</span>
+                <div class="card-content">
+                    <div class="card-header">
+                        <div class="card-icon" style="background: #10a37f;"><svg viewBox="0 0 24 24" fill="white"><path d="M22.28 9.82a5.98 5.98 0 0 0-.52-4.91 6.05 6.05 0 0 0-6.51-2.9A6.07 6.07 0 0 0 4.98 4.18 5.98 5.98 0 0 0 1 7.08a6.05 6.05 0 0 0 .74 7.1 5.98 5.98 0 0 0 .51 4.91 6.05 6.05 0 0 0 6.51 2.9A6.07 6.07 0 0 0 13.26 24a6.06 6.06 0 0 0 5.77-4.21 5.98 5.98 0 0 0 4-2.9 6.06 6.06 0 0 0-.75-7.07z"/></svg></div>
+                        <div><div class="card-title">ChatGPT</div><div class="card-company">OpenAI</div></div>
+                    </div>
+                    <p class="card-description">Самый популярный AI-ассистент с GPT-4o</p>
+                    <div class="card-tags"><span class="tag">GPT-4o</span><span class="tag">Vision</span><span class="tag">DALL-E</span></div>
+                    <div class="card-footer"><div class="card-stats"><span class="stat">⭐ 4.8</span><span class="stat">👥 300M+</span></div><button class="launch-btn">Открыть →</button></div>
+                </div>
+            </div>
+
+            <!-- Claude -->
+            <div class="card claude" data-category="chat code" onclick="openModal('Claude', 'https://claude.ai', '🧡')">
+                <span class="status popular">🔥 TOP</span>
+                <div class="card-content">
+                    <div class="card-header">
+                        <div class="card-icon" style="background: linear-gradient(135deg, #cc7747, #d4a574);"><svg viewBox="0 0 24 24" fill="white"><circle cx="12" cy="12" r="10"/></svg></div>
+                        <div><div class="card-title">Claude</div><div class="card-company">Anthropic</div></div>
+                    </div>
+                    <p class="card-description">Лучший для анализа и текстов. 200K контекст</p>
+                    <div class="card-tags"><span class="tag">Claude 4</span><span class="tag">200K</span><span class="tag">Artifacts</span></div>
+                    <div class="card-footer"><div class="card-stats"><span class="stat">⭐ 4.9</span><span class="stat">👥 80M+</span></div><button class="launch-btn">Открыть →</button></div>
+                </div>
+            </div>
+
+            <!-- DeepSeek -->
+            <div class="card deepseek" data-category="chat code" onclick="openModal('DeepSeek', 'https://chat.deepseek.com', '🔵')">
+                <span class="status hot">🔥 HOT</span>
+                <div class="card-content">
+                    <div class="card-header">
+                        <div class="card-icon" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8);"><svg viewBox="0 0 24 24" fill="white"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4" fill="#1d4ed8"/></svg></div>
+                        <div><div class="card-title">DeepSeek</div><div class="card-company">DeepSeek AI</div></div>
+                    </div>
+                    <p class="card-description">Open Source модель, конкурент GPT-4</p>
+                    <div class="card-tags"><span class="tag">DeepSeek-R1</span><span class="tag">Open Source</span><span class="tag">Free</span></div>
+                    <div class="card-footer"><div class="card-stats"><span class="stat">⭐ 4.7</span><span class="stat">👥 50M+</span></div><button class="launch-btn">Открыть →</button></div>
+                </div>
+            </div>
+
+            <!-- Gemini -->
+            <div class="card gemini" data-category="chat code" onclick="openModal('Gemini', 'https://gemini.google.com', '💎')">
+                <span class="status new">✨ NEW</span>
+                <div class="card-content">
+                    <div class="card-header">
+                        <div class="card-icon" style="background: linear-gradient(135deg, #4285f4, #ea4335);"><svg viewBox="0 0 24 24" fill="white"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+                        <div><div class="card-title">Gemini</div><div class="card-company">Google</div></div>
+                    </div>
+                    <p class="card-description">Мультимодальный AI от Google</p>
+                    <div class="card-tags"><span class="tag">Gemini 2.5</span><span class="tag">1M контекст</span></div>
+                    <div class="card-footer"><div class="card-stats"><span class="stat">⭐ 4.6</span><span class="stat">👥 150M+</span></div><button class="launch-btn">Открыть →</button></div>
+                </div>
+            </div>
+
+            <!-- Copilot -->
+            <div class="card copilot" data-category="chat code" onclick="openModal('Copilot', 'https://copilot.microsoft.com', '💙')">
+                <span class="status free">✓ FREE</span>
+                <div class="card-content">
+                    <div class="card-header">
+                        <div class="card-icon" style="background: linear-gradient(135deg, #0078d4, #00bcf2);"><svg viewBox="0 0 24 24" fill="white"><circle cx="8" cy="8" r="3"/><circle cx="16" cy="10" r="3"/><circle cx="10" cy="16" r="3"/></svg></div>
+                        <div><div class="card-title">Copilot</div><div class="card-company">Microsoft</div></div>
+                    </div>
+                    <p class="card-description">AI-помощник с GPT-4 бесплатно</p>
+                    <div class="card-tags"><span class="tag">GPT-4</span><span class="tag">DALL-E 3</span><span class="tag">Free</span></div>
+                    <div class="card-footer"><div class="card-stats"><span class="stat">⭐ 4.5</span><span class="stat">👥 100M+</span></div><button class="launch-btn">Открыть →</button></div>
+                </div>
+            </div>
+
+            <!-- Grok -->
+            <div class="card grok" data-category="chat" onclick="openModal('Grok', 'https://grok.x.ai', '🤖')">
+                <span class="status new">✨ NEW</span>
+                <div class="card-content">
+                    <div class="card-header">
+                        <div class="card-icon" style="background: #000;"><svg viewBox="0 0 24 24" fill="white"><path d="M18.24 2.25h3.31l-7.23 8.26 8.5 11.24h-6.66l-5.21-6.82L4.99 21.75H1.68l7.73-8.84L1.25 2.25h6.83l4.71 6.23z"/></svg></div>
+                        <div><div class="card-title">Grok</div><div class="card-company">xAI</div></div>
+                    </div>
+                    <p class="card-description">AI от Илона Маска с доступом к X</p>
+                    <div class="card-tags"><span class="tag">Grok-3</span><span class="tag">Real-time</span><span class="tag">X</span></div>
+                    <div class="card-footer"><div class="card-stats"><span class="stat">⭐ 4.5</span><span class="stat">👥 20M+</span></div><button class="launch-btn">Открыть →</button></div>
+                </div>
+            </div>
+
+            <!-- Llama -->
+            <div class="card llama" data-category="chat code" onclick="openModal('Llama', 'https://llama.meta.com', '🦙')">
+                <span class="status free">✓ FREE</span>
+                <div class="card-content">
+                    <div class="card-header">
+                        <div class="card-icon" style="background: linear-gradient(135deg, #663399, #4a2578);"><svg viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg></div>
+                        <div><div class="card-title">Llama 3.3</div><div class="card-company">Meta</div></div>
+                    </div>
+                    <p class="card-description">Open Source модель от Meta</p>
+                    <div class="card-tags"><span class="tag">405B</span><span class="tag">Open Source</span><span class="tag">Local</span></div>
+                    <div class="card-footer"><div class="card-stats"><span class="stat">⭐ 4.5</span><span class="stat">👥 30M+</span></div><button class="launch-btn">Открыть →</button></div>
+                </div>
+            </div>
+
+            <!-- Mistral -->
+            <div class="card mistral" data-category="chat code" onclick="openModal('Mistral', 'https://chat.mistral.ai', '🌬️')">
+                <span class="status online">● Online</span>
+                <div class="card-content">
+                    <div class="card-header">
+                        <div class="card-icon" style="background: linear-gradient(135deg, #ff7700, #ff5500);"><svg viewBox="0 0 24 24" fill="white"><rect x="3" y="3" width="5" height="5"/><rect x="10" y="3" width="5" height="5"/><rect x="17" y="3" width="5" height="5"/></svg></div>
+                        <div><div class="card-title">Mistral</div><div class="card-company">Mistral AI</div></div>
+                    </div>
+                    <p class="card-description">Быстрые европейские модели</p>
+                    <div class="card-tags"><span class="tag">Mistral Large</span><span class="tag">Le Chat</span></div>
+                    <div class="card-footer"><div class="card-stats"><span class="stat">⭐ 4.4</span><span class="stat">👥 10M+</span></div><button class="launch-btn">Открыть →</button></div>
+                </div>
+            </div>
+
+            <!-- Perplexity -->
+            <div class="card perplexity" data-category="search chat" onclick="openModal('Perplexity', 'https://perplexity.ai', '🔍')">
+                <span class="status popular">🔥 TOP</span>
+                <div class="card-content">
+                    <div class="card-header">
+                        <div class="card-icon" style="background: linear-gradient(135deg, #20b2aa, #00ced1);"><svg viewBox="0 0 24 24" fill="white"><circle cx="10" cy="10" r="7" fill="none" stroke="white" stroke-width="2"/><path d="M15 15l6 6" stroke="white" stroke-width="2"/></svg></div>
+                        <div><div class="card-title">Perplexity</div><div class="card-company">Perplexity AI</div></div>
+                    </div>
+                    <p class="card-description">AI-поиск с источниками</p>
+                    <div class="card-tags"><span class="tag">Search</span><span class="tag">Sources</span><span class="tag">Real-time</span></div>
+                    <div class="card-footer"><div class="card-stats"><span class="stat">⭐ 4.8</span><span class="stat">👥 25M+</span></div><button class="launch-btn">Открыть →</button></div>
+                </div>
+            </div>
+
+            <!-- You.com -->
+            <div class="card you" data-category="search chat" onclick="openModal('You.com', 'https://you.com', '🔎')">
+                <span class="status online">● Online</span>
+                <div class="card-content">
+                    <div class="card-header">
+                        <div class="card-icon" style="background: linear-gradient(135deg, #6366f1, #4f46e5);"><svg viewBox="0 0 24 24" fill="white"><path d="M12 2L2 7l10 5 10-5-10-5z"/></svg></div>
+                        <div><div class="card-title">You.com</div><div class="card-company">You Inc.</div></div>
+                    </div>
+                    <p class="card-description">AI-поисковик с агентами</p>
+                    <div class="card-tags"><span class="tag">AI Search</span><span class="tag">Agents</span></div>
+                    <div class="card-footer"><div class="card-stats"><span class="stat">⭐ 4.4</span><span class="stat">👥 8M+</span></div><button class="launch-btn">Открыть →</button></div>
+                </div>
+            </div>
+
+            <!-- Midjourney -->
+            <div class="card midjourney" data-category="image" onclick="openModal('Midjourney', 'https://midjourney.com', '🎨')">
+                <span class="status popular">🔥 TOP</span>
+                <div class="card-content">
+                    <div class="card-header">
+                        <div class="card-icon" style="background: #fff;"><svg viewBox="0 0 24 24" fill="#000"><rect x="3" y="3" width="18" height="18" rx="2" fill="none" stroke="#000" stroke-width="2"/></svg></div>
+                        <div><div class="card-title">Midjourney</div><div class="card-company">Midjourney Inc.</div></div>
+                    </div>
+                    <p class="card-description">Лучший генератор изображений</p>
+                    <div class="card-tags"><span class="tag">V7</span><span class="tag">Art</span><span class="tag">Photo</span></div>
+                    <div class="card-footer"><div class="card-stats"><span class="stat">⭐ 4.9</span><span class="stat">👥 20M+</span></div><button class="launch-btn">Открыть →</button></div>
+                </div>
+            </div>
+
+            <!-- DALL-E -->
+            <div class="card dalle" data-category="image" onclick="openModal('DALL-E 3', 'https://chat.openai.com', '🖼️')">
+                <span class="status online">● Online</span>
+                <div class="card-content">
+                    <div class="card-header">
+                        <div class="card-icon" style="background: linear-gradient(135deg, #ff6b6b, #4ecdc4);"><svg viewBox="0 0 24 24" fill="white"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8" cy="8" r="2"/></svg></div>
+                        <div><div class="card-title">DALL-E 3</div><div class="card-company">OpenAI</div></div>
+                    </div>
+                    <p class="card-description">Точное следование промптам</p>
+                    <div class="card-tags"><span class="tag">DALL-E 3</span><span class="tag">Text-in-Image</span></div>
+                    <div class="card-footer"><div class="card-stats"><span class="stat">⭐ 4.7</span><span class="stat">👥 60M+</span></div><button class="launch-btn">Открыть →</button></div>
+                </div>
+            </div>
+
+            <!-- Stable Diffusion -->
+            <div class="card stable" data-category="image" onclick="openModal('Stable Diffusion', 'https://stability.ai', '🎭')">
+                <span class="status free">✓ FREE</span>
+                <div class="card-content">
+                    <div class="card-header">
+                        <div class="card-icon" style="background: linear-gradient(135deg, #8b5cf6, #a855f7);"><svg viewBox="0 0 24 24" fill="white"><path d="M12 2L2 7l10 5 10-5-10-5z"/></svg></div>
+                        <div><div class="card-title">Stable Diffusion</div><div class="card-company">Stability AI</div></div>
+                    </div>
+                    <p class="card-description">Open Source, работает локально</p>
+                    <div class="card-tags"><span class="tag">SD 3.5</span><span class="tag">Open Source</span><span class="tag">Local</span></div>
+                    <div class="card-footer"><div class="card-stats"><span class="stat">⭐ 4.6</span><span class="stat">👥 15M+</span></div><button class="launch-btn">Открыть →</button></div>
+                </div>
+            </div>
+
+            <!-- Flux -->
+            <div class="card flux" data-category="image" onclick="openModal('Flux', 'https://flux.ai', '⚫')">
+                <span class="status new">✨ NEW</span>
+                <div class="card-content">
+                    <div class="card-header">
+                        <div class="card-icon" style="background: #000;"><svg viewBox="0 0 24 24" fill="white"><circle cx="12" cy="12" r="10"/></svg></div>
+                        <div><div class="card-title">Flux</div><div class="card-company">Black Forest Labs</div></div>
+                    </div>
+                    <p class="card-description">Новый конкурент Midjourney</p>
+                    <div class="card-tags"><span class="tag">Flux Pro</span><span class="tag">Fast</span><span class="tag">Quality</span></div>
+                    <div class="card-footer"><div class="card-stats"><span class="stat">⭐ 4.7</span><span class="stat">👥 5M+</span></div><button class="launch-btn">Открыть →</button></div>
+                </div>
+            </div>
+
+            <!-- Leonardo -->
+            <div class="card leonardo" data-category="image" onclick="openModal('Leonardo AI', 'https://leonardo.ai', '🎨')">
+                <span class="status online">● Online</span>
+                <div class="card-content">
+                    <div class="card-header">
+                        <div class="card-icon" style="background: linear-gradient(135deg, #8a2be2, #6a1cb0);"><svg viewBox="0 0 24 24" fill="white"><path d="M12 2l3 6 6 1-4 4 1 6-6-3-6 3 1-6-4-4 6-1z"/></svg></div>
+                        <div><div class="card-title">Leonardo AI</div><div class="card-company">Leonardo</div></div>
+                    </div>
+                    <p class="card-description">Генератор для игр и дизайна</p>
+                    <div class="card-tags"><span class="tag">Game Assets</span><span class="tag">Design</span></div>
+                    <div class="card-footer"><div class="card-stats"><span class="stat">⭐ 4.5</span><span class="stat">👥 8M+</span></div><button class="launch-btn">Открыть →</button></div>
+                </div>
+            </div>
+
+            <!-- Ideogram -->
+            <div class="card ideogram" data-category="image" onclick="openModal('Ideogram', 'https://ideogram.ai', '✏️')">
+                <span class="status new">✨ NEW</span>
+                <div class="card-content">
+                    <div class="card-header">
+                        <div class="card-icon" style="background: linear-gradient(135deg, #ff69b4, #db4d94);"><svg viewBox="0 0 24 24" fill="white"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z"/></svg></div>
+                        <div><div class="card-title">Ideogram</div><div class="card-company">Ideogram AI</div></div>
+                    </div>
+                    <p class="card-description">Лучший текст на изображениях</p>
+                    <div class="card-tags"><span class="tag">Text</span><span class="tag">Logo</span><span class="tag">Design</span></div>
+                    <div class="card-footer"><div class="card-stats"><span class="stat">⭐ 4.6</span><span class="stat">👥 4M+</span></div><button class="launch-btn">Открыть →</button></div>
+                </div>
+            </div>
+
+            <!-- Suno -->
+            <div class="card suno" data-category="audio" onclick="openModal('Suno', 'https://suno.ai', '🎵')">
+                <span class="status popular">🔥 TOP</span>
+                <div class="card-content">
+                    <div class="card-header">
+                        <div class="card-icon" style="background: linear-gradient(135deg, #ff007f, #7f00ff);"><svg viewBox="0 0 24 24" fill="white"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg></div>
+                        <div><div class="card-title">Suno</div><div class="card-company">Suno AI</div></div>
+                    </div>
+                    <p class="card-description">Генератор музыки с вокалом</p>
+                    <div class="card-tags"><span class="tag">Music</span><span class="tag">Vocals</span><span class="tag">V4</span></div>
+                    <div class="card-footer"><div class="card-stats"><span class="stat">⭐ 4.7</span><span class="stat">👥 15M+</span></div><button class="launch-btn">Открыть →</button></div>
+                </div>
+            </div>
+
+            <!-- Udio -->
+            <div class="card udio" data-category="audio" onclick="openModal('Udio', 'https://udio.com', '🎶')">
+                <span class="status new">✨ NEW</span>
+                <div class="card-content">
+                    <div class="card-header">
+                        <div class="card-icon" style="background: linear-gradient(135deg, #ffd700, #ffb300);"><svg viewBox="0 0 24 24" fill="#000"><path d="M12 3v10.55A4 4 0 1014 17V7h4V3h-6z"/></svg></div>
+                        <div><div class="card-title">Udio</div><div class="card-company">Udio Inc.</div></div>
+                    </div>
+                    <p class="card-description">Конкурент Suno, реалистичная музыка</p>
+                    <div class="card-tags"><span class="tag">Music</span><span class="tag">HQ Audio</span></div>
+                    <div class="card-footer"><div class="card-stats"><span class="stat">⭐ 4.6</span><span class="stat">👥 5M+</span></div><button class="launch-btn">Открыть →</button></div>
+                </div>
+            </div>
+
+            <!-- ElevenLabs -->
+            <div class="card elevenlabs" data-category="audio" onclick="openModal('ElevenLabs', 'https://elevenlabs.io', '🎙️')">
+                <span class="status popular">🔥 TOP</span>
+                <div class="card-content">
+                    <div class="card-header">
+                        <div class="card-icon" style="background: #000;"><svg viewBox="0 0 24 24" fill="white"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/></svg></div>
+                        <div><div class="card-title">ElevenLabs</div><div class="card-company">ElevenLabs</div></div>
+                    </div>
+                    <p class="card-description">Лучший AI для озвучки и клонирования</p>
+                    <div class="card-tags"><span class="tag">TTS</span><span class="tag">Voice Clone</span><span class="tag">32 langs</span></div>
+                    <div class="card-footer"><div class="card-stats"><span class="stat">⭐ 4.8</span><span class="stat">👥 5M+</span></div><button class="launch-btn">Открыть →</button></div>
+                </div>
+            </div>
+
+            <!-- Runway -->
+            <div class="card runway" data-category="video" onclick="openModal('Runway', 'https://runwayml.com', '🎬')">
+                <span class="status popular">🔥 TOP</span>
+                <div class="card-content">
+                    <div class="card-header">
+                        <div class="card-icon" style="background: linear-gradient(135deg, #00d1ff, #0099cc);"><svg viewBox="0 0 24 24" fill="white"><path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"/></svg></div>
+                        <div><div class="card-title">Runway</div><div class="card-company">Runway ML</div></div>
+                    </div>
+                    <p class="card-description">Генератор видео Gen-3 Alpha</p>
+                    <div class="card-tags"><span class="tag">Gen-3</span><span class="tag">Text-to-Video</span></div>
+                    <div class="card-footer"><div class="card-stats"><span class="stat">⭐ 4.6</span><span class="stat">👥 10M+</span></div><button class="launch-btn">Открыть →</button></div>
+                </div>
+            </div>
+
+            <!-- Pika -->
+            <div class="card pika" data-category="video" onclick="openModal('Pika', 'https://pika.art', '⚡')">
+                <span class="status new">✨ NEW</span>
+                <div class="card-content">
+                    <div class="card-header">
+                        <div class="card-icon" style="background: linear-gradient(135deg, #ffc107, #ff9800);"><svg viewBox="0 0 24 24" fill="#000"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></svg></div>
+                        <div><div class="card-title">Pika</div><div class="card-company">Pika Labs</div></div>
+                    </div>
+                    <p class="card-description">Видео с эффектами и редактированием</p>
+                    <div class="card-tags"><span class="tag">Pika 2.0</span><span class="tag">Effects</span></div>
+                    <div class="card-footer"><div class="card-stats"><span class="stat">⭐ 4.4</span><span class="stat">👥 6M+</span></div><button class="launch-btn">Открыть →</button></div>
+                </div>
+            </div>
+
+            <!-- Sora -->
+            <div class="card sora" data-category="video" onclick="openModal('Sora', 'https://openai.com/sora', '🎥')">
+                <span class="status new">✨ NEW</span>
+                <div class="card-content">
+                    <div class="card-header">
+                        <div class="card-icon" style="background: #10a37f;"><svg viewBox="0 0 24 24" fill="white"><path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"/></svg></div>
+                        <div><div class="card-title">Sora</div><div class="card-company">OpenAI</div></div>
+                    </div>
+                    <p class="card-description">Революционный генератор видео</p>
+                    <div class="card-tags"><span class="tag">1 min video</span><span class="tag">Cinematic</span></div>
+                    <div class="card-footer"><div class="card-stats"><span class="stat">⭐ 4.8</span><span class="stat">👥 2M+</span></div><button class="launch-btn">Открыть →</button></div>
+                </div>
+            </div>
+
+            <!-- Kling -->
+            <div class="card kling" data-category="video" onclick="openModal('Kling', 'https://klingai.com', '🎞️')">
+                <span class="status hot">🔥 HOT</span>
+                <div class="card-content">
+                    <div class="card-header">
+                        <div class="card-icon" style="background: linear-gradient(135deg, #ff5722, #e64a19);"><svg viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg></div>
+                        <div><div class="card-title">Kling</div><div class="card-company">Kuaishou</div></div>
+                    </div>
+                    <p class="card-description">Китайский конкурент Sora</p>
+                    <div class="card-tags"><span class="tag">Kling 1.6</span><span class="tag">Long videos</span></div>
+                    <div class="card-footer"><div class="card-stats"><span class="stat">⭐ 4.5</span><span class="stat">👥 8M+</span></div><button class="launch-btn">Открыть →</button></div>
+                </div>
+            </div>
+
+            <!-- HeyGen -->
+            <div class="card heygen" data-category="video" onclick="openModal('HeyGen', 'https://heygen.com', '👤')">
+                <span class="status online">● Online</span>
+                <div class="card-content">
+                    <div class="card-header">
+                        <div class="card-icon" style="background: linear-gradient(135deg, #6366f1, #4f46e5);"><svg viewBox="0 0 24 24" fill="white"><circle cx="12" cy="8" r="4"/><path d="M12 14c-6.63 0-12 2.69-12 6v2h24v-2c0-3.31-5.37-6-12-6z"/></svg></div>
+                        <div><div class="card-title">HeyGen</div><div class="card-company">HeyGen Inc.</div></div>
+                    </div>
+                    <p class="card-description">AI-аватары и дубляж видео</p>
+                    <div class="card-tags"><span class="tag">Avatars</span><span class="tag">Dubbing</span><span class="tag">Lip Sync</span></div>
+                    <div class="card-footer"><div class="card-stats"><span class="stat">⭐ 4.5</span><span class="stat">👥 4M+</span></div><button class="launch-btn">Открыть →</button></div>
+                </div>
+            </div>
+
+            <!-- Cursor -->
+            <div class="card cursor" data-category="code tools" onclick="openModal('Cursor', 'https://cursor.sh', '💻')">
+                <span class="status popular">🔥 TOP</span>
+                <div class="card-content">
+                    <div class="card-header">
+                        <div class="card-icon" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);"><svg viewBox="0 0 24 24" fill="white"><path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"/></svg></div>
+                        <div><div class="card-title">Cursor</div><div class="card-company">Anysphere</div></div>
+                    </div>
+                    <p class="card-description">AI-редактор кода на базе VS Code</p>
+                    <div class="card-tags"><span class="tag">IDE</span><span class="tag">AI Coding</span><span class="tag">GPT-4</span></div>
+                    <div class="card-footer"><div class="card-stats"><span class="stat">⭐ 4.8</span><span class="stat">👥 3M+</span></div><button class="launch-btn">Открыть →</button></div>
+                </div>
+            </div>
+
+            <!-- GitHub Copilot -->
+            <div class="card github" data-category="code tools" onclick="openModal('GitHub Copilot', 'https://github.com/features/copilot', '🐙')">
+                <span class="status popular">🔥 TOP</span>
+                <div class="card-content">
+                    <div class="card-header">
+                        <div class="card-icon" style="background: linear-gradient(135deg, #6e5494, #553c73);"><svg viewBox="0 0 24 24" fill="white"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg></div>
+                        <div><div class="card-title">GitHub Copilot</div><div class="card-company">GitHub</div></div>
+                    </div>
+                    <p class="card-description">AI-автодополнение кода</p>
+                    <div class="card-tags"><span class="tag">Coding</span><span class="tag">Autocomplete</span></div>
+                    <div class="card-footer"><div class="card-stats"><span class="stat">⭐ 4.7</span><span class="stat">👥 15M+</span></div><button class="launch-btn">Открыть →</button></div>
+                </div>
+            </div>
+
+            <!-- Gamma -->
+            <div class="card gamma" data-category="tools" onclick="openModal('Gamma', 'https://gamma.app', '📊')">
+                <span class="status online">● Online</span>
+                <div class="card-content">
+                    <div class="card-header">
+                        <div class="card-icon" style="background: linear-gradient(135deg, #ec4899, #db2777);"><svg viewBox="0 0 24 24" fill="white"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg></div>
+                        <div><div class="card-title">Gamma</div><div class="card-company">Gamma Tech</div></div>
+                    </div>
+                    <p class="card-description">AI-презентации и документы</p>
+                    <div class="card-tags"><span class="tag">Presentations</span><span class="tag">Docs</span></div>
+                    <div class="card-footer"><div class="card-stats"><span class="stat">⭐ 4.6</span><span class="stat">👥 6M+</span></div><button class="launch-btn">Открыть →</button></div>
+                </div>
+            </div>
+
+            <!-- Notion AI -->
+            <div class="card notion" data-category="tools" onclick="openModal('Notion AI', 'https://notion.so', '📝')">
+                <span class="status online">● Online</span>
+                <div class="card-content">
+                    <div class="card-header">
+                        <div class="card-icon" style="background: #fff;"><svg viewBox="0 0 24 24" fill="#000"><path d="M4 4h16v16H4z"/></svg></div>
+                        <div><div class="card-title">Notion AI</div><div class="card-company">Notion Labs</div></div>
+                    </div>
+                    <p class="card-description">AI-помощник для заметок</p>
+                    <div class="card-tags"><span class="tag">Notes</span><span class="tag">Writing</span><span class="tag">Organize</span></div>
+                    <div class="card-footer"><div class="card-stats"><span class="stat">⭐ 4.6</span><span class="stat">👥 35M+</span></div><button class="launch-btn">Открыть →</button></div>
+                </div>
+            </div>
+
+        </div>
+
+        <footer class="footer">
+            <div class="footer-content">
+                <p class="footer-author">Автор: <span>Dmtriy91</span></p>
+                <p class="footer-disclaimer">AI Hub не несёт ответственность за нейросети. Все торговые марки принадлежат их владельцам.</p>
+                <p class="footer-year">©2026 AI Hub</p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Modals -->
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal('modal')">✕</button>
+            <div class="modal-icon" id="modalIcon">🤖</div>
+            <h2 id="modalTitle">Название</h2>
+            <p data-i18n="modalText">Вы будете перенаправлены на официальный сайт</p>
+            <div class="modal-buttons">
+                <button class="modal-btn secondary" onclick="closeModal('modal')" data-i18n="cancel">Отмена</button>
+                <button class="modal-btn primary" id="modalOpenBtn" data-i18n="go">Перейти →</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="aboutModal">
+        <div class="modal-content large">
+            <button class="modal-close" onclick="closeModal('aboutModal')">✕</button>
+            <div class="modal-icon"><svg viewBox="0 0 24 24"><path fill="url(#iconGradient)" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg></div>
+            <h2>О сайте <span class="version-badge">v1.3</span></h2>
+            <div class="modal-scroll modal-text">
+                <h3>🚀 Что такое AI Hub?</h3>
+                <p>AI Hub — это удобный каталог лучших нейросетей и AI-сервисов мира. Мы собрали 25+ инструментов в одном месте.</p>
+                <h3>✨ Возможности</h3>
+                <div class="feature-list">
+                    <div class="feature-item"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>Поиск</div>
+                    <div class="feature-item"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>Фильтры</div>
+                    <div class="feature-item"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>12 языков</div>
+                    <div class="feature-item"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>25+ нейросетей</div>
+                </div>
+                <h3>🎯 Категории</h3>
+                <ul>
+                    <li><strong>Чат-боты</strong> — ChatGPT, Claude, Gemini, DeepSeek, Grok...</li>
+                    <li><strong>Изображения</strong> — Midjourney, DALL-E, Flux, Leonardo, Ideogram...</li>
+                    <li><strong>Видео</strong> — Runway, Sora, Pika, Kling, HeyGen...</li>
+                    <li><strong>Аудио</strong> — Suno, Udio, ElevenLabs...</li>
+                    <li><strong>Код</strong> — Cursor, GitHub Copilot...</li>
+                    <li><strong>Поиск</strong> — Perplexity, You.com...</li>
+                    <li><strong>Инструменты</strong> — Gamma, Notion AI...</li>
+                </ul>
+                <h3>👨‍💻 Разработчик</h3>
+                <p>Создано <strong>Dmtriy91</strong></p>
+                <h3>📬 Контакты</h3>
+                <p>Email: <a href="mailto:dmtriy91@ro.ru">dmtriy91@ro.ru</a></p>
+            </div>
+            <div class="modal-buttons"><button class="modal-btn primary" onclick="closeModal('aboutModal')">Понятно!</button></div>
+        </div>
+    </div>
+
+    <div class="modal" id="licenseModal">
+        <div class="modal-content large">
+            <button class="modal-close" onclick="closeModal('licenseModal')">✕</button>
+            <div class="modal-icon"><svg viewBox="0 0 24 24"><path fill="url(#iconGradient)" d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg></div>
+            <h2>Лицензионное соглашение</h2>
+            <div class="modal-scroll modal-text">
+                <h3>1. Общие положения</h3>
+                <p>Используя сайт AI Hub, вы соглашаетесь с условиями данного Соглашения.</p>
+                <h3>2. Описание сервиса</h3>
+                <p>AI Hub — агрегатор ссылок на сторонние AI-сервисы. Мы не являемся их владельцами.</p>
+                <h3>3. Отказ от ответственности</h3>
+                <ul>
+                    <li>AI Hub не несёт ответственности за работу сторонних сервисов</li>
+                    <li>Мы не гарантируем точность информации</li>
+                    <li>Использование сервисов — на ваш риск</li>
+                    <li>Мы не храним персональные данные</li>
+                </ul>
+                <h3>4. Интеллектуальная собственность</h3>
+                <p>Логотипы и названия принадлежат их владельцам.</p>
+                <h3>5. Контакты</h3>
+                <p>Email: <a href="mailto:dmtriy91@ro.ru">dmtriy91@ro.ru</a></p>
+                <p style="margin-top: 20px; color: #555; font-size: 0.85rem;">Последнее обновление: Февраль 2026</p>
+            </div>
+            <div class="modal-buttons"><button class="modal-btn primary" onclick="closeModal('licenseModal')">Принимаю</button></div>
+        </div>
+    </div>
+
+    <script>
+        // Translations
+        const translations = {
+            ru: { subtitle: "Все лучшие нейросети в одном месте", search: "Поиск нейросетей...", all: "Все", chatbots: "Чат-боты", images: "Изображения", video: "Видео", audio: "Аудио", code: "Код", searchCat: "Поиск", tools: "Инструменты", license: "Лицензия", about: "О сайте", modalText: "Вы будете перенаправлены на официальный сайт", cancel: "Отмена", go: "Перейти →" },
+        };
+
+        let currentLang = 'ru';
+
+        function setLanguage(lang, flag, code) {
+            currentLang = lang;
+            document.getElementById('currentFlag').textContent = flag;
+            document.getElementById('currentLang').textContent = code;
+            document.querySelectorAll('.lang-option').forEach(opt => opt.classList.remove('active'));
+            event.target.closest('.lang-option').classList.add('active');
+            toggleLangDropdown();
+            
+            // Apply translations
+            const t = translations[lang];
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                if (t[el.dataset.i18n]) el.textContent = t[el.dataset.i18n];
+            });
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                if (t[el.dataset.i18nPlaceholder]) el.placeholder = t[el.dataset.i18nPlaceholder];
+            });
+        }
+
+        function toggleLangDropdown() {
+            document.getElementById('langSelector').classList.toggle('open');
+        }
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.lang-selector')) {
+                document.getElementById('langSelector').classList.remove('open');
+            }
+        });
+
+        // Filters & Search
+        const filterBtns = document.querySelectorAll('.filter-btn');
+        const cards = document.querySelectorAll('.card');
+
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                filterBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                const filter = btn.dataset.filter;
+                cards.forEach(card => {
+                    card.style.display = (filter === 'all' || card.dataset.category.includes(filter)) ? 'block' : 'none';
+                });
+            });
+        });
+
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase();
+            cards.forEach(card => {
+                card.style.display = card.textContent.toLowerCase().includes(query) ? 'block' : 'none';
+            });
+        });
+
+        // Modals
+        function openModal(name, url, emoji) {
+            document.getElementById('modalTitle').textContent = name;
+            document.getElementById('modalIcon').textContent = emoji;
+            document.getElementById('modal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+            document.getElementById('modalOpenBtn').onclick = () => { window.open(url, '_blank'); closeModal('modal'); };
+        }
+
+        function openAbout() { document.getElementById('aboutModal').classList.add('active'); document.body.style.overflow = 'hidden'; }
+        function openLicense() { document.getElementById('licenseModal').classList.add('active'); document.body.style.overflow = 'hidden'; }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); document.body.style.overflow = ''; }
+
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(modal.id); });
+        });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') document.querySelectorAll('.modal.active').forEach(m => closeModal(m.id)); });
+    </script>
+</body>
+</html>
